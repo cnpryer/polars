@@ -6,14 +6,20 @@ on:
       - 'polars/**'
 jobs:
   test-rust:
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
       - name: Install latest Rust nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-04-01
           override: true
-      - name: Run tests
+      - name: Checkout branch
         run: |
+          git clone ${{ github.server_url }}/${{ github.repository }} C:/polars --depth 1
+      - name: Run tests
+        working-directory: C:/polars
+        run: |
+          rustup override set nightly-2022-04-01
+          git checkout ${{ github.event.pull_request.head.sha }}
+          set RUSTFLAGS="-C debuginfo=0"
           cd polars && make test && make integration-tests
